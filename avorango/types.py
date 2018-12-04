@@ -27,9 +27,3 @@ class String(BaseType):
                 "Value length must be less than {}".format(self._length)
             )
         self._value = value
-
-
-types = {
-    'Integer': Integer,
-    'String': String,
-}

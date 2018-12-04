@@ -1,8 +1,9 @@
 from inspect import getmembers
-from .types import Integer, String
+from .types import Integer, String, BaseType
 from arango import ArangoClient
 from stringcase import snakecase
 from inspect import isclass
+from .errors import DefinitionError
 
 
 class Avorango:
@@ -33,7 +34,8 @@ class Avorango:
             database, username=username, password=password,
         )
 
-    def Column(self, value_type):
+    @staticmethod
+    def Column(value_type):
         """Column definition
 
         A property of a model must be initalized with this function
@@ -42,6 +44,8 @@ class Avorango:
         property = Column(data_type)
         """
         type_instance = value_type() if isclass(value_type) else value_type
+        if not isinstance(type_instance, BaseType):
+            raise DefinitionError("Invalid type given")
         return property(
             type_instance.getter,
             type_instance.setter,
