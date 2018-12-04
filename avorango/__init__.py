@@ -1,12 +1,13 @@
 from inspect import getmembers
-from .types import types
+from .types import Integer, String
 from arango import ArangoClient
 from stringcase import snakecase
+from inspect import isclass
 
 
 class Avorango:
-    Integer = 'Integer'
-    String = 'String'
+    Integer = Integer
+    String = String
 
     class Model:
         def __init__(self, data=None):
@@ -40,7 +41,7 @@ class Avorango:
 
         property = Column(data_type)
         """
-        type_instance = types[value_type]()
+        type_instance = value_type() if isclass(value_type) else value_type
         return property(
             type_instance.getter,
             type_instance.setter,

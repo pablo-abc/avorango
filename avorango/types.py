@@ -16,9 +16,16 @@ class Integer(BaseType):
 
 
 class String(BaseType):
+    def __init__(self, length):
+        self._length = length
+
     def setter(self, outer, value):
         if not isinstance(value, str):
             raise InvalidFieldError("String expected")
+        if len(value) > self._length:
+            raise InvalidFieldError(
+                "Value length must be less than {}".format(self._length)
+            )
         self._value = value
 
 
