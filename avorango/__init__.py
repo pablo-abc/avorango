@@ -15,11 +15,21 @@ class Avorango:
                  getmembers(model, lambda o: isinstance(o, property))]
             self._properties = dict(properties)
 
-    def __init__(self):
-        self.client = ArangoClient()
-        test_db = self.client.db('test', username='root')
-        characters = test_db.collection('characters')
-        print(characters.all().batch())
+    def __init__(self,
+                 protocol='http',
+                 host='127.0.0.1',
+                 port=8529,
+                 database='_system',
+                 username='root',
+                 password=''):
+        self.client = ArangoClient(
+            protocol=protocol,
+            host=host,
+            port=port,
+        )
+        self.session = self.client.db(
+            database, username=username, password=password,
+        )
 
     def Column(self, value_type):
         """Column definition
