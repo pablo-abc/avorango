@@ -44,3 +44,7 @@ class Avorango:
             type_instance.getter,
             type_instance.setter,
         )
+
+    def create_all(self):
+        models = [model.__name__ for model in self.Model.__subclasses__()]
+        print(models)
