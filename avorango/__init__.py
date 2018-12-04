@@ -2,7 +2,7 @@ from inspect import getmembers
 from .types import Integer, String, BaseType
 from arango import ArangoClient
 from stringcase import snakecase
-from inspect import isclass
+from inspect import isclass, isroutine
 from .errors import DefinitionError
 
 
@@ -12,11 +12,21 @@ class Avorango:
 
     class Model:
         def __init__(self, data=None):
-            model = self.__class__
+            if data is None:
+                return
+            [setattr(self, p[0], data[p[0]])
+             for p in getmembers(type(self), lambda o: not isroutine(o))
+             if p[0] in data and not p[0].startswith('_')]
+
+        def save(self):
             properties = \
                 [p for p in
-                 getmembers(model, lambda o: isinstance(o, property))]
+                 getmembers(type(self), lambda o: not isroutine(o))
+                 if not p[0].startswith('_')]
             self._properties = dict(properties)
+            if 'id' in self._properties:
+                self._properties['_key'] = self._properties.pop('id')
+            print(self._properties)
 
     class Column:
         def __init__(self, value_type, required=False, primary_key=False):
@@ -25,12 +35,19 @@ class Avorango:
                 raise DefinitionError("Invalid type given")
             self._required = required
             self._primary_key = primary_key
+            self._set_rules()
 
         def __get__(self, obj, objtype):
             return self.type_.getter()
 
         def __set__(self, obj, val):
             self.type_.setter(val)
+
+        def _set_rules(self):
+            try:
+                self.length = self.type_.length
+            except AttributeError:
+                pass
 
     def __init__(self,
                  protocol='http',

@@ -17,13 +17,13 @@ class Integer(BaseType):
 
 class String(BaseType):
     def __init__(self, length):
-        self._length = length
+        self.length = length
 
     def setter(self, value):
         if not isinstance(value, str):
             raise InvalidFieldError("String expected")
-        if len(value) > self._length:
+        if len(value) > self.length:
             raise InvalidFieldError(
-                "Value length must be less than {}".format(self._length)
+                "Value length must be less than {}".format(self.length)
             )
         self._value = value
