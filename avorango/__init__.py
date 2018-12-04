@@ -1,6 +1,7 @@
 from inspect import getmembers
 from .types import types
 from arango import ArangoClient
+from stringcase import snakecase
 
 
 class Avorango:
@@ -46,5 +47,11 @@ class Avorango:
         )
 
     def create_all(self):
-        models = [model.__name__ for model in self.Model.__subclasses__()]
-        print(models)
+        models = [model.__collectionname__
+                  if hasattr(model, '__collectionname__')
+                  else snakecase(model.__name__)
+                  for model in self.Model.__subclasses__()]
+        for model in models:
+            if not self.session.has_collection(model):
+                self.session.create_collection(model)
+                print("Created collection: {}".format(model))
