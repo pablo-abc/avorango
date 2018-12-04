@@ -22,6 +22,13 @@ class Avorango:
         print(characters.all().batch())
 
     def Column(self, value_type):
+        """Column definition
+
+        A property of a model must be initalized with this function
+        in order for it to be taken into account.
+
+        property = Column(data_type)
+        """
         type_instance = types[value_type]()
         return property(
             type_instance.getter,
