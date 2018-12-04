@@ -18,6 +18,20 @@ class Avorango:
                  getmembers(model, lambda o: isinstance(o, property))]
             self._properties = dict(properties)
 
+    class Column:
+        def __init__(self, value_type, required=False, primary_key=False):
+            self.type_ = value_type() if isclass(value_type) else value_type
+            if not isinstance(self.type_, BaseType):
+                raise DefinitionError("Invalid type given")
+            self._required = required
+            self._primary_key = primary_key
+
+        def __get__(self, obj, objtype):
+            return self.type_.getter()
+
+        def __set__(self, obj, val):
+            self.type_.setter(val)
+
     def __init__(self,
                  protocol='http',
                  host='127.0.0.1',
@@ -32,23 +46,6 @@ class Avorango:
         )
         self.session = self.client.db(
             database, username=username, password=password,
-        )
-
-    @staticmethod
-    def Column(value_type):
-        """Column definition
-
-        A property of a model must be initalized with this function
-        in order for it to be taken into account.
-
-        property = Column(data_type)
-        """
-        type_instance = value_type() if isclass(value_type) else value_type
-        if not isinstance(type_instance, BaseType):
-            raise DefinitionError("Invalid type given")
-        return property(
-            type_instance.getter,
-            type_instance.setter,
         )
 
     def create_all(self):
