@@ -14,6 +14,7 @@ class Collection:
         self._collection = self._session.collection(self._collection_name)
         if data is None:
             return
+        # Assign data to object
         [setattr(self, p[0], data[p[0]])
          for p in getmembers(type(self), lambda o: not isroutine(o))
          if p[0] in data and not p[0].startswith('_')]
@@ -29,17 +30,15 @@ class Collection:
 
     @property
     def _properties(self):
-        properties = \
-            [p for p in
-             getmembers(
-                 type(self), lambda o: not isroutine(o)
-                 and not isinstance(o, property)
-             )
-             if not p[0].startswith('_')]
-        return dict(properties)
+        return [p for p in
+                getmembers(
+                    type(self), lambda o: not isroutine(o)
+                    and not isinstance(o, property)
+                )
+                if not p[0].startswith('_')]
 
     def save(self):
-        properties = self._properties.copy()
+        properties = dict(self._properties)
         result = None
 
         if properties['key'] is None:
