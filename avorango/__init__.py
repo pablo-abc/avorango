@@ -11,7 +11,11 @@ class Avorango:
     String = String
 
     class Model:
+        _collection_name = None
+
         def __init__(self, data=None):
+            if self._collection_name is None:
+                self._collection_name = snakecase(type(self).__name__)
             if data is None:
                 return
             [setattr(self, p[0], data[p[0]])
@@ -30,24 +34,17 @@ class Avorango:
 
     class Column:
         def __init__(self, value_type, required=False, primary_key=False):
-            self.type_ = value_type() if isclass(value_type) else value_type
-            if not isinstance(self.type_, BaseType):
+            self._type = value_type() if isclass(value_type) else value_type
+            if not isinstance(self._type, BaseType):
                 raise DefinitionError("Invalid type given")
             self._required = required
             self._primary_key = primary_key
-            self._set_rules()
 
         def __get__(self, obj, objtype):
-            return self.type_.getter()
+            return self._type.getter()
 
         def __set__(self, obj, val):
-            self.type_.setter(val)
-
-        def _set_rules(self):
-            try:
-                self.length = self.type_.length
-            except AttributeError:
-                pass
+            self._type.setter(val)
 
     def __init__(self,
                  protocol='http',
@@ -66,8 +63,8 @@ class Avorango:
         )
 
     def create_all(self):
-        models = [model.__collectionname__
-                  if hasattr(model, '__collectionname__')
+        models = [model._collection_name
+                  if hasattr(model, '_collection_name')
                   else snakecase(model.__name__)
                   for model in self.Model.__subclasses__()]
         for model in models:
