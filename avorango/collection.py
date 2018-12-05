@@ -1,12 +1,14 @@
 from inspect import getmembers, isroutine
 from stringcase import snakecase
+from .column import Column
+from .types import String
 
 
 class Collection:
     _collection_name = None
     _session = None
     _collection = None
-    key = None
+    key = Column(String)
 
     def __init__(self, data=None):
         if self._collection_name is None:
@@ -30,14 +32,22 @@ class Collection:
 
     @property
     def _properties(self):
-        return [p for p in
-                getmembers(
-                    type(self), lambda o: not isroutine(o)
-                    and not isinstance(o, property)
-                )
-                if not p[0].startswith('_')]
+        """Attributes of the instance as a dictionary"""
+        return dict([p for p in
+                     getmembers(
+                         type(self), lambda o: not isroutine(o)
+                         and not isinstance(o, property)
+                     )
+                     if not p[0].startswith('_')])
 
     def save(self):
+        """Saves or updates a collection
+
+        If a key is defined on the instance, it will check if an instance
+        with the same key is defined in the database. If it does, it will
+        execute an update. In every other situation, it will create a new
+        document.
+        """
         properties = dict(self._properties)
         result = None
 
