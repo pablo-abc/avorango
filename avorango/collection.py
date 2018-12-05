@@ -18,45 +18,48 @@ class Collection:
          for p in getmembers(type(self), lambda o: not isroutine(o))
          if p[0] in data and not p[0].startswith('_')]
 
-    def save(self):
-        properties = \
-            [p for p in
-             getmembers(type(self), lambda o: not isroutine(o))
-             if not p[0].startswith('_')]
-        self._properties = dict(properties)
-
-        result = None
-        if 'key' in self._properties and self._properties['key'] is None:
-            del self._properties['key']
-        if 'key' not in self._properties:
-            result = self._collection.insert(
-                self._properties, return_new=True
-            )
-        else:
-            self._properties['_key'] = self._properties.pop('key')
-            id = '{}/{}'.format(
-                self._collection_name,
-                self._properties['_key'],
-            )
-            self._properties['_id'] = id
-            collection = self._collection.get(id)
-
-            if collection is None:
-                result = self._collection.insert(
-                    self._properties, return_new=True
-                )
-            else:
-                result = self._collection.update(
-                    self._properties, return_new=True,
-                )
-        result['new']['key'] = result['new'].pop('_key')
-        return type(self)(result['new'])
-
     @property
-    def _id(self):
+    def id(self):
         if self.key is None:
             return None
         return "{}/{}".format(
             self._collection_name,
             self.key,
         )
+
+    @property
+    def _properties(self):
+        properties = \
+            [p for p in
+             getmembers(
+                 type(self), lambda o: not isroutine(o)
+                 and not isinstance(o, property)
+             )
+             if not p[0].startswith('_')]
+        return dict(properties)
+
+    def save(self):
+        properties = self._properties.copy()
+        result = None
+
+        if properties['key'] is None:
+            del properties['key']
+            result = self._collection.insert(
+                properties, return_new=True
+            )
+        else:
+            properties['_key'] = properties.pop('key')
+            properties['_id'] = self.id
+
+            collection = self._collection.get(self.id)
+            if collection is None:
+                result = self._collection.insert(
+                    properties, return_new=True
+                )
+            else:
+                result = self._collection.update(
+                    properties, return_new=True,
+                )
+
+        result['new']['key'] = result['new'].pop('_key')
+        return type(self)(result['new'])
