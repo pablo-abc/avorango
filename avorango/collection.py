@@ -22,7 +22,7 @@ class Collection:
     def id(self):
         if self.key is None:
             return None
-        return "{}/{}".format(
+        return '{}/{}'.format(
             self._collection_name,
             self.key,
         )
