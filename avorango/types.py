@@ -1,29 +1,45 @@
-from .errors import InvalidFieldError
+from .errors import InvalidFieldError, RequiredError
 
 
 class BaseType:
-    _value = None
+    _type = None
+    _name = None
 
-    def getter(self):
-        return self._value
+    def validate(self, value, required=False):
+        if self._type is None:
+            return self
+        if value is None:
+            if required:
+                raise RequiredError()
+            else:
+                return None
+        if not isinstance(value, self._type):
+            raise InvalidFieldError(
+                "Expected {}".format(
+                    str(self._type) if self._name is None else self._name
+                )
+            )
+        return value
 
 
 class Integer(BaseType):
-    def setter(self, value):
-        if not isinstance(value, int):
-            raise InvalidFieldError("Integer expected")
-        self._value = value
+    _type = int
+    _name = 'integer'
 
 
 class String(BaseType):
-    def __init__(self, length):
-        self.length = length
+    _type = str
+    _name = 'string'
+    _length = None
 
-    def setter(self, value):
-        if not isinstance(value, str):
-            raise InvalidFieldError("String expected")
-        if len(value) > self.length:
+    def __init__(self, length=None):
+        self._length = length
+
+    def validate(self, value, *args, **kwargs):
+        super(String, self).validate(value, *args, **kwargs)
+
+        if self._length is not None and len(value) > self._length:
             raise InvalidFieldError(
-                "Value length must be less than {}".format(self.length)
+                "Value length must be less than {}".format(self._length)
             )
-        self._value = value
+        return value
