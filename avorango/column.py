@@ -1,5 +1,6 @@
+from weakref import WeakKeyDictionary
 from inspect import isclass
-from .errors import DefinitionError
+from .errors import DefinitionError, RequiredError
 from .types import BaseType
 
 
@@ -10,9 +11,17 @@ class Column:
             raise DefinitionError("Invalid type given")
         self._required = required
         self._primary_key = primary_key
+        self._values = WeakKeyDictionary()
 
     def __get__(self, obj, objtype):
-        return self._type.getter()
+        if obj is None:
+            return self
+        return self._values.get(obj, None)
 
     def __set__(self, obj, val):
-        self._type.setter(val)
+        self._values[obj] = self._type.validate(val, self._required)
+
+    def __delete__(self, obj):
+        if self._required:
+            raise RequiredError("The field can not be deleted")
+        del self._values[obj]
