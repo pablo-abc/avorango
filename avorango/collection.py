@@ -53,7 +53,7 @@ class Collection(metaclass=CollectionMeta):
         )
 
     @property
-    def _properties(self):
+    def attributes(self):
         """Return attributes of the instance as a dictionary."""
         return {
             p[0]: p[1].__get__(self, type(self)) for p in
@@ -104,7 +104,7 @@ class Collection(metaclass=CollectionMeta):
         execute an update. In every other situation, it will create a new
         document.
         """
-        properties = dict(self._properties)
+        properties = dict(self.attributes)
         self._check_required(properties)
         result = None
 
