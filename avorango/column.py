@@ -14,7 +14,8 @@ class Column:
     def __get__(self, obj, objtype):
         if obj is None:
             return self
-        return obj.__dict__[self.name]
+        return obj.__dict__[self.name] \
+            if self.name in obj.__dict__ else None
 
     def __set__(self, obj, val):
         obj.__dict__[self.name] = self._type.validate(val, self._required)
