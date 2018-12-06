@@ -5,8 +5,16 @@ from .types import String
 from .errors import SessionError
 
 
-class Collection:
+class CollectionMeta(type):
     _collection_name = None
+
+    @property
+    def collection_name(self):
+        return self._collection_name if self._collection_name is not None \
+            else snakecase(self.__name__)
+
+
+class Collection(metaclass=CollectionMeta):
     _session = None
     _collection = None
     key = Column(String)
@@ -21,11 +29,6 @@ class Collection:
         [setattr(self, p[0], data[p[0]])
          for p in getmembers(type(self), lambda o: not isroutine(o))
          if p[0] in data and not p[0].startswith('_')]
-
-    @classmethod
-    def collection_name(cls):
-        return cls._collection_name if cls._collection_name is not None \
-            else snakecase(cls.__name__)
 
     @property
     def id(self):
