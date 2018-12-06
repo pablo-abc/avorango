@@ -2,7 +2,7 @@ from inspect import getmembers, isroutine
 from stringcase import snakecase
 from .column import Column
 from .types import String
-from .errors import SessionError
+from .errors import SessionError, RequiredError
 from functools import wraps
 
 
@@ -64,6 +64,17 @@ class Collection(metaclass=CollectionMeta):
             if not p[0].startswith('_')
         }
 
+    @property
+    def _descriptors(self):
+        return {
+            p[0]: p[1] for p in
+            getmembers(
+                type(self), lambda o: not isroutine(o)
+                and not isinstance(o, property)
+            )
+            if not p[0].startswith('_')
+        }
+
     @classmethod
     @check_session
     def find(cls, filter_={}):
@@ -94,6 +105,7 @@ class Collection(metaclass=CollectionMeta):
         document.
         """
         properties = dict(self._properties)
+        self._check_required(properties)
         result = None
 
         if self.key is None:
@@ -123,3 +135,10 @@ class Collection(metaclass=CollectionMeta):
             cls.collection_name,
             key,
         )
+
+    def _check_required(self, properties):
+        for p, value in self._descriptors.items():
+            if properties[p] is None and value._required is True:
+                raise RequiredError(
+                    "The attribute '{}' is required".format(p)
+                )

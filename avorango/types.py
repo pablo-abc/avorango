@@ -37,7 +37,8 @@ class String(BaseType):
 
     def validate(self, value, *args, **kwargs):
         super(String, self).validate(value, *args, **kwargs)
-
+        if value is None:
+            return value
         if self._length is not None and len(value) > self._length:
             raise InvalidFieldError(
                 "Value length must be less than {}".format(self._length)
