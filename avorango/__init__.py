@@ -18,6 +18,13 @@ class Avorango:
                  database='_system',
                  username='root',
                  password=''):
+        """Connect to database
+
+        Initializes the client of python-arango and connects
+        to the database ussing its db() method. This is exposed
+        in the 'session' attribute of the instance and injected
+        into the 'Collection' class attribute.
+        """
         self.client = ArangoClient(
             protocol=protocol,
             host=host,
@@ -29,6 +36,10 @@ class Avorango:
         Collection._session = self.session
 
     def create_all(self):
+        """Create all collections defined in package
+
+        Implemented by using Collection.__subclasses__()
+        """
         print(self.Collection.__subclasses__()[0].__name__)
         collections = [collection._collection_name
                        if collection._collection_name is not None

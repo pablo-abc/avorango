@@ -14,3 +14,7 @@ class DefinitionError(BaseError):
 
 class RequiredError(BaseError):
     message = "The field is required"
+
+
+class SessionError(BaseError):
+    message = "No session defined"

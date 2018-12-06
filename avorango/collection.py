@@ -2,6 +2,7 @@ from inspect import getmembers, isroutine
 from stringcase import snakecase
 from .column import Column
 from .types import String
+from .errors import SessionError
 
 
 class Collection:
@@ -21,6 +22,11 @@ class Collection:
          for p in getmembers(type(self), lambda o: not isroutine(o))
          if p[0] in data and not p[0].startswith('_')]
 
+    @classmethod
+    def collection_name(cls):
+        return cls._collection_name if cls._collection_name is not None \
+            else snakecase(cls.__name__)
+
     @property
     def id(self):
         if self.key is None:
@@ -32,7 +38,7 @@ class Collection:
 
     @property
     def _properties(self):
-        """Attributes of the instance as a dictionary"""
+        """Return attributes of the instance as a dictionary."""
         return dict([p for p in
                      getmembers(
                          type(self), lambda o: not isroutine(o)
@@ -40,8 +46,13 @@ class Collection:
                      )
                      if not p[0].startswith('_')])
 
+    @classmethod
+    def find(cls, filter={}):
+        if cls._session is None:
+            raise SessionError()
+
     def save(self):
-        """Saves or updates a collection
+        """Save or update a collection.
 
         If a key is defined on the instance, it will check if an instance
         with the same key is defined in the database. If it does, it will
