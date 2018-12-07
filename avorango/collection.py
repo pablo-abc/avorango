@@ -78,18 +78,28 @@ class Collection(metaclass=CollectionMeta):
     @classmethod
     @check_session
     def find(cls, filter_={}):
-        return cls._collection.find(filter_)
+        cursor = cls._collection.find(filter_)
+        results = []
+        while not cursor.empty():
+            results.append(cls._prepare_result(cursor))
+        return results
 
     @classmethod
     @check_session
     def findByKey(cls, key):
         String().validate(key)
-        return cls._collection.get(cls._make_id(key))
+        result = cls._collection.get(cls._make_id(key))
+        return cls._prepare_result(result)
 
     @classmethod
     @check_session
     def findOne(cls, filter_={}):
-        return cls._collection.find(filter_, limit=1).next()
+        cursor = cls._collection.find(filter_, limit=1)
+        if cursor.empty():
+            return None
+        result = cursor.next()
+        result['key'] = result.pop('_key')
+        return cls(result)
 
     @classmethod
     @check_session
@@ -129,6 +139,12 @@ class Collection(metaclass=CollectionMeta):
         result['new']['key'] = result['new'].pop('_key')
         return type(self)(result['new'])
 
+    def delete(self):
+        id = self.id
+        if id is None:
+            raise RequiredError("Key is not defined in instance")
+        self._collection.delete(id)
+
     @classmethod
     def _make_id(cls, key):
         return '{}/{}'.format(
@@ -142,3 +158,10 @@ class Collection(metaclass=CollectionMeta):
                 raise RequiredError(
                     "The attribute '{}' is required".format(p)
                 )
+
+    @classmethod
+    def _prepare_result(cls, result):
+        if not isinstance(result, dict):
+            result = result.next()
+        result['key'] = result.pop('_key')
+        return cls(result)

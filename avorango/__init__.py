@@ -40,9 +40,8 @@ class Avorango:
 
         Implemented by using Collection.__subclasses__()
         """
-        print(self.Collection.__subclasses__()[0].__name__)
-        collections = [collection._collection_name
-                       if collection._collection_name is not None
+        collections = [collection.collection_name
+                       if collection.collection_name is not None
                        else snakecase(collection.__name__)
                        for collection in self.Collection.__subclasses__()]
         for collection in collections:

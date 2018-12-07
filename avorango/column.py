@@ -9,7 +9,9 @@ class Column:
             value_type,
             required=False,
             primary_key=False,
-            default=None):
+            default=None,
+            unique=False,
+            nullable=True):
         self._type = value_type() if isclass(value_type) else value_type
         if not isinstance(self._type, BaseType):
             raise DefinitionError("Invalid type given")
