@@ -97,9 +97,7 @@ class Collection(metaclass=CollectionMeta):
         cursor = cls._collection.find(filter_, limit=1)
         if cursor.empty():
             return None
-        result = cursor.next()
-        result['key'] = result.pop('_key')
-        return cls(result)
+        return cls._prepare_result(cursor)
 
     @classmethod
     @check_session
