@@ -134,7 +134,6 @@ class Collection(metaclass=CollectionMeta):
                 result = self._collection.update(
                     properties, return_new=True,
                 )
-        print(result['new'])
         return type(self)._prepare_result(result['new'])
 
     def delete(self):
