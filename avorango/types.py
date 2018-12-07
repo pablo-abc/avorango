@@ -1,18 +1,15 @@
-from .errors import InvalidFieldError, RequiredError
+from .errors import InvalidFieldError
 
 
 class BaseType:
     _type = None
     _name = None
 
-    def validate(self, value, required=False):
+    def validate(self, value):
         if self._type is None:
             return self
         if value is None:
-            if required:
-                raise RequiredError()
-            else:
-                return None
+            return None
         if not isinstance(value, self._type):
             raise InvalidFieldError(
                 "Expected {}".format(
@@ -36,9 +33,9 @@ class String(BaseType):
         self._length = length
 
     def validate(self, value, *args, **kwargs):
-        super(String, self).validate(value, *args, **kwargs)
         if value is None:
-            return value
+            return None
+        super(String, self).validate(value, *args, **kwargs)
         if self._length is not None and len(value) > self._length:
             raise InvalidFieldError(
                 "Value length must be less than {}".format(self._length)

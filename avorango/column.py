@@ -31,9 +31,7 @@ class Column:
         return self._default['value']
 
     def __set__(self, obj, val):
-        obj.__dict__[self.name] = self._type.validate(
-            val, self._required,
-        )
+        obj.__dict__[self.name] = self._type.validate(val)
         self._default['set'] = True
 
     def __delete__(self, obj):

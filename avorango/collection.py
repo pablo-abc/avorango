@@ -33,10 +33,10 @@ class Collection(metaclass=CollectionMeta):
     _collection = None
     key = Column(String)
 
-    def __init__(self, data=None):
+    def __init__(self, **data):
         self._collectionname = type(self).collection_name
         self._collection = self._session.collection(self._collectionname)
-        if data is None:
+        if data is None or data == {}:
             return
         # Assign data to object
         [setattr(self, p[0], data[p[0]])
@@ -77,8 +77,36 @@ class Collection(metaclass=CollectionMeta):
 
     @classmethod
     @check_session
-    def find(cls, filter_={}):
+    def find(cls, **filter_):
         cursor = cls._collection.find(filter_)
+        results = []
+        while not cursor.empty():
+            results.append(cls._prepare_result(cursor))
+        return results
+
+    @classmethod
+    @check_session
+    def findLike(cls,
+                 case_sensitive=False,
+                 limit=None,
+                 skip=None,
+                 **filter_):
+        if filter_ == {}:
+            return cls.find(limit=limit, skip=skip)
+        query = ""
+        ci = "false" if case_sensitive else "true"
+        pagination = "LIMIT {}".format(limit) if limit is not None else ""
+        pagination = "LIMIT {}, {}".format(skip, limit) \
+            if limit is not None and skip is not None else ""
+        for key in filter_:
+            query += "FILTER LIKE(r.{}, @{}, {}) ".format(key, key, ci)
+        cursor = cls._session.aql.execute(
+            "FOR r IN {} ".format(cls.collection_name)
+            + query
+            + pagination
+            + "RETURN r",
+            bind_vars=filter_,
+        )
         results = []
         while not cursor.empty():
             results.append(cls._prepare_result(cursor))
@@ -93,7 +121,7 @@ class Collection(metaclass=CollectionMeta):
 
     @classmethod
     @check_session
-    def findOne(cls, filter_={}):
+    def findOne(cls, **filter_):
         cursor = cls._collection.find(filter_, limit=1)
         if cursor.empty():
             return None
@@ -161,4 +189,4 @@ class Collection(metaclass=CollectionMeta):
         if not isinstance(result, dict):
             result = result.next()
         result['key'] = result.pop('_key')
-        return cls(result)
+        return cls(**result)
