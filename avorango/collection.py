@@ -117,11 +117,12 @@ class Collection(metaclass=CollectionMeta):
         result = None
 
         if self.key is None:
+            properties.pop('key')
             result = self._collection.insert(
                 properties, return_new=True
             )
         else:
-            properties['_key'] = self.key
+            properties['_key'] = properties.pop('key')
             properties['_id'] = self.id
 
             collection = self._collection.get(self.id)
@@ -133,9 +134,8 @@ class Collection(metaclass=CollectionMeta):
                 result = self._collection.update(
                     properties, return_new=True,
                 )
-
-        result['new']['key'] = result['new'].pop('_key')
-        return type(self)(result['new'])
+        print(result['new'])
+        return type(self)._prepare_result(result['new'])
 
     def delete(self):
         id = self.id
