@@ -86,18 +86,18 @@ class Collection(metaclass=CollectionMeta):
 
     @classmethod
     @check_session
-    def findLike(cls,
-                 case_sensitive=False,
-                 limit=None,
-                 skip=None,
-                 **filter_):
+    def find_like(cls,
+                  case_sensitive=False,
+                  limit=None,
+                  skip=None,
+                  **filter_):
         if filter_ == {}:
             return cls.find(limit=limit, skip=skip)
         query = ""
         ci = "false" if case_sensitive else "true"
         pagination = "LIMIT {}".format(limit) if limit is not None else ""
         pagination = "LIMIT {}, {}".format(skip, limit) \
-            if limit is not None and skip is not None else ""
+            if limit is not None and skip is not None else pagination
         for key in filter_:
             query += "FILTER LIKE(r.{}, @{}, {}) ".format(key, key, ci)
         cursor = cls._session.aql.execute(
@@ -114,14 +114,14 @@ class Collection(metaclass=CollectionMeta):
 
     @classmethod
     @check_session
-    def findByKey(cls, key):
+    def get(cls, key):
         String().validate(key)
         result = cls._collection.get(cls._make_id(key))
         return cls._prepare_result(result)
 
     @classmethod
     @check_session
-    def findOne(cls, **filter_):
+    def find_one(cls, **filter_):
         cursor = cls._collection.find(filter_, limit=1)
         if cursor.empty():
             return None
