@@ -1,6 +1,6 @@
 from inspect import getmembers, isroutine
 from .meta import CollectionMeta
-from .column import Column
+from avorango.column import Column
 from .types import String
 from .errors import SessionError, RequiredError
 from functools import wraps
