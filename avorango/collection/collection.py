@@ -1,8 +1,8 @@
 from inspect import getmembers, isroutine
 from .meta import CollectionMeta
 from avorango.column import Column
-from .types import String
-from .errors import SessionError, RequiredError
+from avorango.types import String
+from avorango.errors import SessionError, RequiredError
 from functools import wraps
 
 
