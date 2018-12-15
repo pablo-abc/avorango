@@ -17,8 +17,10 @@ def check_session(f):
 
 class Collection(metaclass=CollectionMeta):
     _collectionname = None
+    _graphname = None
     _session = None
     _collection = None
+    _graph = None
     key = Column(String)
 
     def __init__(self, **data):

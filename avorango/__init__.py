@@ -1,14 +1,16 @@
 from .types import Integer, String
 from arango import ArangoClient
-from stringcase import snakecase
+from .errors import RequiredError
 from .collection import Collection
 from .column import Column
+from .edge import Edge
 
 
 class Avorango:
     Integer = Integer
     String = String
     Collection = Collection
+    Edge = Edge
     Column = Column
 
     def __init__(self,
@@ -35,21 +37,83 @@ class Avorango:
         )
         Collection._session = self.session
 
+    def _get_or_create_graph(self, graph_name):
+        if self.session.has_graph(graph_name):
+            graph = self.session.graph(graph_name)
+        else:
+            graph = self.session \
+                        .create_graph(graph_name)
+        return graph
+
+    def _create_collections(self,
+                            graph_name,
+                            collection_name,
+                            collection_type,
+                            from_vertices=None,
+                            to_vertices=None):
+        is_vertex = collection_type == "vertex"
+        message_type = "collection" if is_vertex else "graphless edge"
+        create_type = "collection" if is_vertex else "definition"
+        if graph_name is not None:
+            graph = self._get_or_create_graph(graph_name)
+            collection_has = getattr(
+                graph, "has_{}_collection".format(collection_type)
+            )
+            collection_create = getattr(
+                graph,
+                "create_{}_{}".format(collection_type, create_type)
+            )
+            if not collection_has(collection_name):
+                if is_vertex:
+                    collection_create(collection_name)
+                elif from_vertices is not None and to_vertices is not None:
+                    collection_create(
+                        collection_name, from_vertices, to_vertices
+                    )
+                else:
+                    raise RequiredError(
+                        "from_vertices and to_vertices required"
+                    )
+                print(
+                    "Created {}: {}"
+                    .format(collection_type, collection_name)
+                )
+            else:
+                print(
+                    "The {} '{}' already exists. "
+                    "Nothing changed"
+                    .format(collection_type, collection_name)
+                )
+        elif not self.session.has_collection(collection_name):
+            self.session.create_collection(collection_name)
+            print(
+                "Created {}: {}"
+                .format(message_type, collection_name)
+            )
+        else:
+            print(
+                "The {} '{}' already exists. "
+                "Nothing changed"
+                .format(message_type, collection_name)
+            )
+
     def create_all(self):
         """Create all collections defined in package
 
         Implemented by using Collection.__subclasses__()
+        and Edge.__subclasses__()
         """
-        collections = [collection.collection_name
-                       if collection.collection_name is not None
-                       else snakecase(collection.__name__)
-                       for collection in self.Collection.__subclasses__()]
-        for collection in collections:
-            if not self.session.has_collection(collection):
-                self.session.create_collection(collection)
-                print("Created collection: {}".format(collection))
-            else:
-                print(
-                    "Collection '{}' already exists. "
-                    "Nothing changed".format(collection)
-                )
+        for collection in self.Collection.__subclasses__():
+            name = collection.collection_name
+            self._create_collections(
+                collection._graphname, name, 'vertex'
+            )
+
+        for edge in self.Edge.__subclasses__():
+            self._create_collections(
+                edge._graphname,
+                edge.edge_name,
+                'edge',
+                edge._from_vertices,
+                edge._to_vertices,
+            )
