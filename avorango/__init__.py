@@ -4,12 +4,13 @@ from .errors import RequiredError
 from .collection import Collection
 from .column import Column
 from .edge import Edge
+from .vertex import Vertex
 
 
 class Avorango:
     Integer = Integer
     String = String
-    Collection = Collection
+    Vertex = Vertex
     Edge = Edge
     Column = Column
 
@@ -100,19 +101,19 @@ class Avorango:
     def create_all(self):
         """Create all collections defined in package
 
-        Implemented by using Collection.__subclasses__()
+        Implemented by using Vertex.__subclasses__()
         and Edge.__subclasses__()
         """
-        for collection in self.Collection.__subclasses__():
-            name = collection.collection_name
+        for vertex in self.Vertex.__subclasses__():
+            name = vertex.collection_name
             self._create_collections(
-                collection._graphname, name, 'vertex'
+                vertex._graphname, name, 'vertex'
             )
 
         for edge in self.Edge.__subclasses__():
             self._create_collections(
                 edge._graphname,
-                edge.edge_name,
+                edge.collection_name,
                 'edge',
                 edge._from_vertices,
                 edge._to_vertices,

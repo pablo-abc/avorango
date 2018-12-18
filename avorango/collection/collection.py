@@ -1,6 +1,5 @@
 from inspect import getmembers, isroutine
 from .meta import CollectionMeta
-from avorango.column import Column
 from avorango.types import String
 from avorango.errors import SessionError, RequiredError
 from functools import wraps
@@ -19,20 +18,10 @@ def check_session(f):
 class Collection(metaclass=CollectionMeta):
     _collectionname = None
     _graphname = None
+    _graph = None
     _session = None
     _collection = None
     _graph = None
-    _key = Column(String)
-
-    def __init__(self, **data):
-        self._collectionname = type(self).collection_name
-        self._collection = self._session.collection(self._collectionname)
-        if data is None or data == {}:
-            return
-        # Assign data to object
-        [setattr(self, p[0], data[p[0]])
-         for p in getmembers(type(self), lambda o: not isroutine(o))
-         if p[0] in data and (not p[0].startswith('_') or p[0] == '_key')]
 
     @property
     def id(self):
