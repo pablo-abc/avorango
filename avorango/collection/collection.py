@@ -7,6 +7,7 @@ from functools import wraps
 
 
 def check_session(f):
+    """Check if a session has been added to the class."""
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         if self._session is None:
