@@ -122,6 +122,7 @@ class Collection(metaclass=CollectionMeta):
         """Proxy the aql.execute metho of python-arango."""
         return cls._session.aql.execute(query, **kwargs)
 
+    @check_session
     def save(self):
         """Save or update a collection.
 
