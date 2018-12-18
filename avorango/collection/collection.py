@@ -21,7 +21,7 @@ class Collection(metaclass=CollectionMeta):
     _session = None
     _collection = None
     _graph = None
-    key = Column(String)
+    _key = Column(String)
 
     def __init__(self, **data):
         self._collectionname = type(self).collection_name
@@ -31,10 +31,14 @@ class Collection(metaclass=CollectionMeta):
         # Assign data to object
         [setattr(self, p[0], data[p[0]])
          for p in getmembers(type(self), lambda o: not isroutine(o))
-         if p[0] in data and not p[0].startswith('_')]
+         if p[0] in data and (not p[0].startswith('_') or p[0] == '_key')]
 
     @property
     def id(self):
+        """Retrieve id from collection.
+
+       The id is made by the combination of the collectio name and the key.
+        """
         if self.key is None:
             return None
         return '{}/{}'.format(
@@ -56,6 +60,7 @@ class Collection(metaclass=CollectionMeta):
 
     @property
     def _descriptors(self):
+        """Retrieve the descriptor instances of the class."""
         return {
             p[0]: p[1] for p in
             getmembers(
@@ -68,6 +73,7 @@ class Collection(metaclass=CollectionMeta):
     @classmethod
     @check_session
     def find(cls, **filter_):
+        """Find documents matching the filter."""
         cursor = cls._collection.find(filter_)
         results = []
         while not cursor.empty():
@@ -81,6 +87,7 @@ class Collection(metaclass=CollectionMeta):
                   limit=None,
                   skip=None,
                   **filter_):
+        """Find documents matching 'like' filter."""
         if filter_ == {}:
             return cls.find(limit=limit, skip=skip)
         query = ""
@@ -105,6 +112,7 @@ class Collection(metaclass=CollectionMeta):
     @classmethod
     @check_session
     def get(cls, key):
+        """Get document by key."""
         String().validate(key)
         result = cls._collection.get(cls._make_id(key))
         return cls._prepare_result(result)
@@ -112,6 +120,7 @@ class Collection(metaclass=CollectionMeta):
     @classmethod
     @check_session
     def find_one(cls, **filter_):
+        """Find one document matching a filter."""
         cursor = cls._collection.find(filter_, limit=1)
         if cursor.empty():
             return None
@@ -120,6 +129,7 @@ class Collection(metaclass=CollectionMeta):
     @classmethod
     @check_session
     def execute(cls, query, **kwargs):
+        """Proxy the aql.execute metho of python-arango."""
         return cls._session.aql.execute(query, **kwargs)
 
     def save(self):
@@ -140,7 +150,6 @@ class Collection(metaclass=CollectionMeta):
                 properties, return_new=True
             )
         else:
-            properties['_key'] = properties.pop('key')
             properties['_id'] = self.id
 
             collection = self._collection.get(self.id)
@@ -162,12 +171,14 @@ class Collection(metaclass=CollectionMeta):
 
     @classmethod
     def _make_id(cls, key):
+        """Take a key and return the collection's id."""
         return '{}/{}'.format(
             cls.collection_name,
             key,
         )
 
     def _check_required(self, properties):
+        """Check if all required parameters all defined."""
         for p, value in self._descriptors.items():
             if properties[p] is None and value._required is True:
                 raise RequiredError(
@@ -176,7 +187,11 @@ class Collection(metaclass=CollectionMeta):
 
     @classmethod
     def _prepare_result(cls, result):
+        """Take a cursor and turn it into an instance of the class.
+
+        If it receives a dictionary it only returns the instance made from
+        it.
+        """
         if not isinstance(result, dict):
             result = result.next()
-        result['key'] = result.pop('_key')
         return cls(**result)

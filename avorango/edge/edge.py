@@ -9,3 +9,5 @@ class Edge(metaclass=EdgeMeta):
     _graph = None
     _from_vertex = None
     _to_vertex = None
+    _to = None
+    _from = None
