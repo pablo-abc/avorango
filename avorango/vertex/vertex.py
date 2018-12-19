@@ -10,7 +10,7 @@ class Vertex(Collection):
     def __init__(self, **data):
         self._collectionname = type(self).collection_name
         if self._graphname is not None:
-            self._graph = self._session.grap(self._grah_name)
+            self._graph = self._session.graph(self._graphname)
             self._collection = \
                 self._graph.vertex_collection(self._collectionname)
         else:

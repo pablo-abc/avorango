@@ -29,11 +29,11 @@ class Collection(metaclass=CollectionMeta):
 
        The id is made by the combination of the collectio name and the key.
         """
-        if self.key is None:
+        if self._key is None:
             return None
         return '{}/{}'.format(
             self._collectionname,
-            self.key,
+            self._key,
         )
 
     @property
@@ -135,8 +135,7 @@ class Collection(metaclass=CollectionMeta):
         self._check_required(properties)
         result = None
 
-        if self.key is None:
-            properties.pop('key')
+        if self._key is None:
             result = self._collection.insert(
                 properties, return_new=True
             )
