@@ -4,6 +4,9 @@ from .types import BaseType
 
 
 class Column:
+    _required = False
+    _primary_key = False
+
     def __init__(
             self,
             value_type,

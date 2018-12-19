@@ -1,3 +1,4 @@
+from inspect import getmembers
 from .types import Integer, String
 from arango import ArangoClient
 from .errors import RequiredError
@@ -109,6 +110,16 @@ class Avorango:
             self._create_collections(
                 vertex._graphname, name, 'vertex'
             )
+            edges = [e[1] for e in getmembers(vertex)
+                     if isinstance(e[1], Edge)]
+            for edge in edges:
+                self._create_collections(
+                    edge._graphname,
+                    edge._collectionname,
+                    'edge',
+                    edge._from_vertices,
+                    edge._to_vertices,
+                )
 
         for edge in self.Edge.__subclasses__():
             self._create_collections(

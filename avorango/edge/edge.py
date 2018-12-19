@@ -5,11 +5,12 @@ from avorango.errors import InvalidFieldError
 class Edge(Collection):
     _from_vertices = None
     _to_vertices = None
+    _required = False
 
     def __init__(self,
                  from_vertices=None,
                  to_vertices=None,
-                 collectionname=None):
+                 collection_name=None):
         self._collectionname = type(self).collection_name
         if self._graphname is not None:
             self._graph = self._session.graph(self._graphname)
@@ -18,8 +19,8 @@ class Edge(Collection):
         else:
             self._collection = \
                 self._session.collection(self._collectionname)
-        if collectionname is not None:
-            self._collectionname = collectionname
+        if collection_name is not None:
+            self._collectionname = collection_name
         if from_vertices is not None:
             if type(self)._from_vertices is None:
                 type(self)._from_vertices = []
@@ -31,8 +32,11 @@ class Edge(Collection):
             type(self)._to_vertices = type(self)._to_vertices + to_vertices
 
     def __get__(self, obj, objtype):
+        print(obj)
         if obj is None:
             return self
+        if self.name not in obj.__dict__:
+            return None
         return obj.__dict__[self.name]
 
     def __set__(self, obj, val):
