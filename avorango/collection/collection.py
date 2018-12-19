@@ -155,12 +155,14 @@ class Collection(metaclass=CollectionMeta):
                     properties, return_new=True,
                 )
         if 'new' in result:
-            return type(self)._prepare_result(result['new'])
+            self._key = result['new']['_key']
         else:
-            properties['_key'] = result['_key']
-            return type(self)._prepare_result(properties)
+            self._key = result['_key']
+        return self
 
+    @check_session
     def delete(self):
+        """Delete the document from the database."""
         id = self.id
         if id is None:
             raise RequiredError("Key is not defined in instance")
