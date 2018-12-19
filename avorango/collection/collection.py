@@ -131,7 +131,12 @@ class Collection(metaclass=CollectionMeta):
         execute an update. In every other situation, it will create a new
         document.
         """
-        properties = dict(self.attributes)
+        attributes = dict(self.attributes)
+        properties = {p: attributes[p] for p in attributes
+                      if not self.iscollection(attributes[p])}
+        collections = {p: attributes[p] for p in attributes
+                       if self.iscollection(attributes[p])}
+        print(collections)
         self._check_required(properties)
         result = None
 
@@ -176,10 +181,20 @@ class Collection(metaclass=CollectionMeta):
             key,
         )
 
+    def iscollection(self, collection):
+        if isinstance(collection, list):
+            for c in collection:
+                if isinstance(c, type(self)):
+                    return True
+            return False
+        if isinstance(collection, type(self)):
+            return True
+
     def _check_required(self, properties):
         """Check if all required parameters all defined."""
-        for p, value in self._descriptors.items():
-            if properties[p] is None and value._required is True:
+        descriptors = self._descriptors
+        for p, v in properties.items():
+            if v is None and descriptors[p]._required:
                 raise RequiredError(
                     "The attribute '{}' is required".format(p)
                 )
