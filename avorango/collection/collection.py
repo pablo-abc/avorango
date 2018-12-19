@@ -136,9 +136,12 @@ class Collection(metaclass=CollectionMeta):
         result = None
 
         if self._key is None:
-            result = self._collection.insert(
-                properties, return_new=True
-            )
+            if self._graph is None:
+                result = self._collection.insert(
+                    properties, return_new=True
+                )
+            else:
+                result = self._collection.insert(properties)
         else:
             properties['_id'] = self.id
 
@@ -151,7 +154,11 @@ class Collection(metaclass=CollectionMeta):
                 result = self._collection.update(
                     properties, return_new=True,
                 )
-        return type(self)._prepare_result(result['new'])
+        if 'new' in result:
+            return type(self)._prepare_result(result['new'])
+        else:
+            properties['_key'] = result['_key']
+            return type(self)._prepare_result(properties)
 
     def delete(self):
         id = self.id
