@@ -113,13 +113,14 @@ class Avorango:
             edges = [e[1] for e in getmembers(vertex)
                      if isinstance(e[1], Edge)]
             for edge in edges:
-                self._create_collections(
-                    edge._graphname,
-                    edge._collectionname,
-                    'edge',
-                    edge._from_vertices,
-                    edge._to_vertices,
-                )
+                if type(edge) not in self.Edge.__subclasses__():
+                    self._create_collections(
+                        edge._graphname,
+                        edge._collectionname,
+                        'edge',
+                        edge._from_vertices,
+                        edge._to_vertices,
+                    )
 
         for edge in self.Edge.__subclasses__():
             self._create_collections(

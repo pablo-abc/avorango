@@ -32,7 +32,6 @@ class Edge(Collection):
             type(self)._to_vertices = type(self)._to_vertices + to_vertices
 
     def __get__(self, obj, objtype):
-        print(obj)
         if obj is None:
             return self
         if self.name not in obj.__dict__:
