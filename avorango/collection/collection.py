@@ -136,7 +136,9 @@ class Collection(metaclass=CollectionMeta):
                       if not self.iscollection(attributes[p])}
         collections = {p: attributes[p] for p in attributes
                        if self.iscollection(attributes[p])}
-        print(collections)
+        for key, value in collections.items():
+            print(isinstance(getattr(type(self), key), Collection))
+        return getattr(type(self), key)
         self._check_required(properties)
         result = None
 
@@ -184,10 +186,10 @@ class Collection(metaclass=CollectionMeta):
     def iscollection(self, collection):
         if isinstance(collection, list):
             for c in collection:
-                if isinstance(c, type(self)):
+                if isinstance(c, Collection):
                     return True
             return False
-        if isinstance(collection, type(self)):
+        if isinstance(collection, Collection):
             return True
 
     def _check_required(self, properties):
