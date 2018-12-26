@@ -1,12 +1,8 @@
 from inspect import getmembers, isroutine
 from avorango.collection import Collection
-from avorango.column import Column
-from avorango.types import String
 
 
 class Vertex(Collection):
-    _key = Column(String)
-
     def __init__(self, **data):
         self._collectionname = type(self).collection_name
         if self._graphname is not None:

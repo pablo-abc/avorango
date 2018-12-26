@@ -10,8 +10,12 @@ class Edge(Collection):
     def __init__(self,
                  from_vertices=None,
                  to_vertices=None,
-                 collection_name=None):
-        self._collectionname = type(self).collection_name
+                 collection_name=None,
+                 graph_name=None):
+        if collection_name is not None:
+            self._collectionname = collection_name
+        else:
+            self._collectionname = type(self).collection_name
         if self._graphname is not None:
             self._graph = self._session.graph(self._graphname)
             self._collection = self._graph.edge_collection(
@@ -19,8 +23,6 @@ class Edge(Collection):
         else:
             self._collection = \
                 self._session.collection(self._collectionname)
-        if collection_name is not None:
-            self._collectionname = collection_name
         if from_vertices is not None:
             if type(self)._from_vertices is None:
                 type(self)._from_vertices = []

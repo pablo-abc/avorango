@@ -3,6 +3,7 @@ from .meta import CollectionMeta
 from avorango.types import String
 from avorango.errors import SessionError, RequiredError
 from functools import wraps
+from avorango.column import Column
 
 
 def check_session(f):
@@ -22,6 +23,7 @@ class Collection(metaclass=CollectionMeta):
     _session = None
     _collection = None
     _graph = None
+    _key = Column(String)
 
     @property
     def id(self):
@@ -46,6 +48,8 @@ class Collection(metaclass=CollectionMeta):
                 and not isinstance(o, property)
             )
             if not p[0].startswith('_')
+            or p[0] == '_from'
+            or p[0] == '_to'
         }
 
     @property
@@ -58,6 +62,8 @@ class Collection(metaclass=CollectionMeta):
                 and not isinstance(o, property)
             )
             if not p[0].startswith('_')
+            or p[0] == '_from'
+            or p[0] == '_to'
         }
 
     @classmethod
@@ -133,12 +139,8 @@ class Collection(metaclass=CollectionMeta):
         """
         attributes = dict(self.attributes)
         properties = {p: attributes[p] for p in attributes
-                      if not self.iscollection(attributes[p])}
-        collections = {p: attributes[p] for p in attributes
-                       if self.iscollection(attributes[p])}
-        for key, value in collections.items():
-            print(isinstance(getattr(type(self), key), Collection))
-        return getattr(type(self), key)
+                      if not self.iscollection(attributes[p])
+                      and attributes[p] is not None}
         self._check_required(properties)
         result = None
 
@@ -165,6 +167,13 @@ class Collection(metaclass=CollectionMeta):
             self._key = result['new']['_key']
         else:
             self._key = result['_key']
+
+        collections = {p: attributes[p] for p in attributes
+                       if self.iscollection(attributes[p])}
+        for key, value in collections.items():
+            edge = getattr(type(self), key)
+            if isinstance(edge, Collection):
+                self._save_relation(edge, value)
         return self
 
     @check_session
@@ -182,6 +191,37 @@ class Collection(metaclass=CollectionMeta):
             cls.collection_name,
             key,
         )
+
+    def _save_relation(self, edge, collection):
+        edge_cls = type(edge)
+        if isinstance(collection, list):
+            for c in collection:
+                c.save()
+                new_edge = edge_cls(
+                    collection_name=edge._collectionname,
+                    graph_name=edge._graphname,
+                )
+                new_edge._from = self.id
+                new_edge._to = c.id
+                new_edge._collection = edge._collection
+                new_edge._collectionname = edge._collectionname
+                new_edge._graph = edge._graph
+                new_edge._graphname = edge._graphname
+                new_edge.save()
+            return collection
+        collection.save()
+        new_edge = edge_cls(
+            collection_name=edge._collectionname,
+            graph_name=edge._graphname,
+        )
+        new_edge._from = self.id
+        new_edge._to = collection.id
+        new_edge._collection = edge._collection
+        new_edge._collectionname = edge._collectionname
+        new_edge._graph = edge._graph
+        new_edge._graphname = edge._graphname
+        new_edge.save()
+        return collection
 
     def iscollection(self, collection):
         if isinstance(collection, list):
